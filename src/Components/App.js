@@ -1,53 +1,102 @@
 import React, { Component } from "react";
 import Loading from "./Loader/Loader";
+import ImageGallery from "./ImageGallery/ImageGallery";
 import Notification from "./Notification/Notification";
-import axios from "axios";
+import ImagesApi from "./api/ImagesApi";
+import SearchBar from "./SearchBar/SearchBar";
+import Modal from "./Modal/Modal";
+import Button from "./Button/Button";
+import "./App.css";
 
 export default class App extends Component {
   state = {
     images: [],
-    loading: false,
+    isLoading: false,
     error: null,
     searchQuery: "",
-    page: 0,
-    largeImageUrl: null,
+    page: 1,
+    // largeImageUrl: null,
+    webformatURL: null,
+    isShown: false,
+    imgSrc: "",
+    imgAlt: "",
   };
-  // q=что_искать&page=номер_страницы
 
-  componentDidMount() {
-    // const apiKey = "17617972-3da791f5653deb15d8df96d4c";
-    this.setState({ loading: true });
-    axios
-      .get(
-        "https://pixabay.com/api/?image_type=photo&orientation=horizontal&per_page=12&key=17617972-3da791f5653deb15d8df96d4c"
-      )
-      .then((response) => {
-        this.setState({
-          images: response.data.hits,
-        });
-      })
-      .catch((error) => this.setState({ error }))
-      .finally(() => this.setState({ loading: false }));
+  componentDidUpdate(prevProps, prevState) {
+    const prevQuery = prevState.searchQuery;
+    const nextQuery = this.state.searchQuery;
+
+    if (prevQuery !== nextQuery) {
+      this.fetchImages();
+      // console.log("need request");
+    }
   }
 
+  fetchImages = () => {
+    const { searchQuery, page } = this.state;
+    this.setState({ isLoading: true });
+    ImagesApi.fetchImagesWithQuery(searchQuery, page)
+      .then((images) => {
+        this.setState((prevState) => ({
+          images: [...prevState.images, ...images],
+          page: prevState.page + 1,
+        }));
+      })
+      .catch((error) => {
+        // console.log(error)
+        this.setState({ error });
+      })
+      .finally(() => this.setState({ isLoading: false }));
+  };
+
+  handleSearchFormSubmit = (query) => {
+    this.setState({ searchQuery: query, page: 1, images: [] });
+  };
+
+  openModal = (e) => {
+    // console.log("e.target", e.target);
+    const target = e.target;
+
+    if (target.nodeName === "IMG") {
+      this.setState(
+        (prevState) => ({
+          isShown: !prevState.isShown,
+        }),
+        this.setState({
+          imgSrc: target.src,
+          imgAlt: target.alt,
+        })
+      );
+    } else return;
+  };
+
+  closeModal = () => {
+    this.setState({
+      isShown: false,
+    });
+  };
+
   render() {
-    const { images, loading, error } = this.state;
+    const { images, isLoading, error, isShown, imgSrc, imgAlt } = this.state;
     return (
       <>
+        <SearchBar onSubmit={this.handleSearchFormSubmit} />
+
         {error && (
-          <Notification
-            message={`Whoops, something went wrong: ${error.message}`}
-          />
+          <Notification message={`Whoops, something went wrong: ${error}`} />
         )}
-        {loading && <Loading />}
+        {isLoading && <Loading />}
+
         {images.length > 0 && (
-          <ul>
-            {this.state.images.map((image) => (
-              <li key={image.id}>
-                <img src={image.largeImageURL} alt={image.tags}></img>
-              </li>
-            ))}
-          </ul>
+          <ImageGallery images={images} openModal={this.openModal} />
+        )}
+
+        {images.length > 0 && !isLoading && (
+          <Button loadMore={this.fetchImages} />
+        )}
+
+        {isShown && (
+          <Modal imgSrc={imgSrc} imgAlt={imgAlt} closeModal={this.closeModal} />
         )}
       </>
     );
