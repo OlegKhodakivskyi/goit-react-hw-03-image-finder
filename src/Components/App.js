@@ -15,7 +15,7 @@ export default class App extends Component {
     error: null,
     searchQuery: "",
     page: 1,
-    // largeImageUrl: null,
+    largeImageURL: null,
     webformatURL: null,
     isShown: false,
     imgSrc: "",
@@ -50,24 +50,19 @@ export default class App extends Component {
   };
 
   handleSearchFormSubmit = (query) => {
+    if (this.state.searchQuery === query) {
+      return;
+    }
+
     this.setState({ searchQuery: query, page: 1, images: [] });
   };
 
-  openModal = (e) => {
-    // console.log("e.target", e.target);
-    const target = e.target;
-
-    if (target.nodeName === "IMG") {
-      this.setState(
-        (prevState) => ({
-          isShown: !prevState.isShown,
-        }),
-        this.setState({
-          imgSrc: target.src,
-          imgAlt: target.alt,
-        })
-      );
-    } else return;
+  openModal = (largeImageURL, imgAlt) => {
+    this.setState((prevState) => ({
+      isShown: !prevState.isShown,
+      imgSrc: largeImageURL,
+      imgAlt: imgAlt,
+    }));
   };
 
   closeModal = () => {

@@ -5,9 +5,15 @@ import css from "./ImageGallery.module.css";
 const ImageGallery = ({ images, openModal }) => {
   return (
     <>
-      <ul className={css.ImageGallery} onClick={openModal}>
-        {images.map(({ id, tags, webformatURL }) => (
-          <ImageGalleryItem key={id} tags={tags} webformatURL={webformatURL} />
+      <ul className={css.ImageGallery}>
+        {images.map(({ id, tags, webformatURL, largeImageURL }) => (
+          <ImageGalleryItem
+            key={id}
+            tags={tags}
+            webformatURL={webformatURL}
+            largeImageURL={largeImageURL}
+            openModal={openModal}
+          />
         ))}
       </ul>
     </>

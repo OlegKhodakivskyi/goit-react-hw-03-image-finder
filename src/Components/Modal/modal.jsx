@@ -7,7 +7,7 @@ export default class Modal extends Component {
     document.addEventListener("click", this.handleCLick);
   }
 
-  componentWillMount() {
+  componentWillUnmount() {
     window.removeEventListener("keydown", this.handleCLick);
     document.removeEventListener("click", this.handleCLick);
   }
